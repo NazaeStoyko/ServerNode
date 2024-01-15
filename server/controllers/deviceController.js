@@ -59,8 +59,31 @@ class DeviceController {
                 include: [{ model: DeviceInfo, as: 'info' }]
             },
         )
+     
         return res.json(device)
     }
+    async delete(req, res, next) {
+        const { id } = req.params;
+      
+ 
+      
+        try {
+          // Використовуйте параметризований запит для запобігання SQL-ін'єкції
+          const device = await Device.findOne({ where: { id } });
+      
+          // Перевірте, чи товар має посилання на інші об'єкти
+          if (device.references.length > 0) {
+            return res.status(409).send('Неможливо видалити товар. Він має посилання на інші обєкт в базі даних ');
+          }
+      
+          await Device.destroy({ where: { id } });
+          res.status(204).send();
+        } catch (err) {
+          next(ApiError.badRequest(err.message));
+        }
+      }
+    
+
 }
 
 module.exports = new DeviceController()
